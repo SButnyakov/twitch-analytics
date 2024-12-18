@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 	"twitch-data-fetcher/config"
 )
 
@@ -16,8 +17,9 @@ type Stream struct {
 	GameName    string
 	Type        string
 	Tags        []string
-	ViewerCount int
+	ViewerCount uint32
 	Language    string
+	Timestamp   time.Time
 }
 
 type streamJSON struct {
@@ -29,7 +31,7 @@ type streamJSON struct {
 	GameName    string   `json:"game_name"`
 	Type        string   `json:"type"`
 	Tags        []string `json:"tags"`
-	ViewerCount int      `json:"viewer_count"`
+	ViewerCount uint32   `json:"viewer_count"`
 	Language    string   `json:"language"`
 }
 
@@ -143,5 +145,6 @@ func streamJSONtoStream(streamJSON streamJSON) (string, Stream) {
 		Tags:        streamJSON.Tags,
 		ViewerCount: streamJSON.ViewerCount,
 		Language:    streamJSON.Language,
+		Timestamp:   time.Now(),
 	}
 }

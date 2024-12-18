@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"time"
 	"twitch-data-fetcher/config"
-	"twitch-data-fetcher/endpoints"
+	"twitch-data-fetcher/internal/broker/kafka"
+	"twitch-data-fetcher/internal/endpoints"
 
 	"github.com/joho/godotenv"
 )
@@ -17,32 +19,61 @@ func main() {
 
 	cfg := config.MustLoad()
 
-	token, err := endpoints.GetToken(cfg)
+	fmt.Println(cfg)
+
+	conn, err := kafka.Connect(cfg)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(token)
 
-	cfg.Auth.Token = token
+	log.Printf("URLs: %v\n", cfg.URLs)
 
-	fmt.Printf("Access token: %s\n", cfg.Auth.Token.AccessToken)
-	fmt.Printf("Expires in: %d\n", cfg.Auth.Token.ExpiresIn)
+	for {
+		go func() {
+			token, err := endpoints.GetToken(cfg)
+			if err != nil {
+				panic(err)
+			}
+			fmt.Println(token)
 
-	fmt.Printf("URLs: %v\n", cfg.URLs)
+			cfg.Auth.Token = token
 
-	start := time.Now()
-	streams, err := endpoints.GetStreams(cfg)
-	if err != nil {
-		panic(err)
+			log.Printf("Access token: %s\n", cfg.Auth.Token.AccessToken)
+			log.Printf("Expires in: %d\n", cfg.Auth.Token.ExpiresIn)
+
+			start := time.Now()
+			streams, err := endpoints.GetStreams(cfg)
+			if err != nil {
+				panic(err)
+			}
+			elapsed := time.Since(start)
+			log.Printf("GetStreams length %d\n", len(streams))
+			log.Printf("GetStreams time took %s\n", elapsed)
+
+			log.Println("Sending messages...")
+
+			kafka.WriteStreamsMessage(conn, streams)
+
+			log.Println("Message sent")
+		}()
+		time.Sleep(10 * time.Minute)
 	}
-	fmt.Println(streams)
-	fmt.Println(len(streams))
-	elapsed := time.Since(start)
-	fmt.Printf("Time took %s\n", elapsed)
-
-	m := make(map[string]int)
-	for _, stream := range streams {
-		m[stream.Language] = m[stream.Language] + 1
-	}
-	fmt.Println(m)
 }
+
+/*
+	m := make(map[string]endpoints.Stream, 3)
+	for i := 0; i < 3; i++ {
+		m[string(i)] = endpoints.Stream{
+			UserLogin:   fmt.Sprintf("userlogin%d", i),
+			UserName:    fmt.Sprintf("username%d", i),
+			GameId:      fmt.Sprintf("gameid%d", i),
+			GameName:    fmt.Sprintf("gamename%d", i),
+			ViewerCount: uint32(i * 100),
+			Language:    "RU",
+			Timestamp:   time.Now(),
+		}
+	}
+
+	clickhouse.Insert(conn, m)
+	clickhouse.Select(conn)
+*/

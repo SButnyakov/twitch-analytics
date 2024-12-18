@@ -7,6 +7,7 @@ import (
 type Config struct {
 	Auth
 	URLs
+	Kafka
 }
 
 type Auth struct {
@@ -24,6 +25,13 @@ type Token struct {
 	AccessToken string `json:"access_token"`
 	ExpiresIn   int64  `json:"expires_in"`
 	TokenType   string `json:"token_type"`
+}
+
+type Kafka struct {
+	Broker    string `env:"KAFKA_ADDRESS" env-required:"true"`
+	GroupID   string `env:"KAFKA_GROUP_ID" env-required:"true"`
+	Topic     string `env:"KAFKA_TOPIC" env-required:"true"`
+	Partition int    `env:"KAFKA_PARTITION" env-required:"true"`
 }
 
 func MustLoad() *Config {
