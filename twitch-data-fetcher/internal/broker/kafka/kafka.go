@@ -31,7 +31,7 @@ func Connect(cfg *config.Config) (*kafka.Conn, error) {
 	return conn, err
 }
 
-func WriteStreamsMessage(conn *kafka.Conn, streams map[string]endpoints.Stream) {
+func WriteStreamsMessage(cfg *config.Config, conn *kafka.Conn, streams map[string]endpoints.Stream) {
 	streamsArr := make([]StreamsJSONMessage, 0, len(streams))
 	for _, v := range streams {
 		log.Println(v.ViewerCount)
@@ -71,6 +71,23 @@ func WriteStreamsMessage(conn *kafka.Conn, streams map[string]endpoints.Stream) 
 	}
 	if err != nil {
 		log.Printf("failed to write messages: %v\n", err)
+		conn.Close()
+		conn, err = Connect(cfg)
+		if err != nil {
+			log.Printf("failed to reconnect kafka: %v\n", err)
+		} else {
+			log.Printf("successfull kafka reconnect: %v\n", err)
+			conn.SetWriteDeadline(time.Now().Add(30 * time.Second))
+			writtenBytes, err = conn.WriteMessages(messages...)
+			if writtenBytes == messagesLength {
+				log.Println("all bytes successfully written")
+			} else {
+				log.Printf("failed to write %d bytes\n", messagesLength-writtenBytes)
+			}
+			if err != nil {
+				log.Printf("failed to write messages: %v\n", err)
+			}
+		}
 	}
 }
 

@@ -52,7 +52,7 @@ func main() {
 
 			log.Println("Sending messages...")
 
-			kafka.WriteStreamsMessage(conn, streams)
+			kafka.WriteStreamsMessage(cfg, conn, streams)
 
 			log.Println("Message sent")
 		}()
