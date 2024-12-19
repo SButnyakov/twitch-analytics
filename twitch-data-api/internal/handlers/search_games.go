@@ -22,14 +22,14 @@ func SearchGames(client *redis.Client) fiber.Handler {
 			log.Printf("empty \"startswith\" search parameter\n")
 			return fiber.ErrBadRequest
 		}
-		log.Printf("\"startswith\"=%s", prefix)
 
 		top, err := strconv.Atoi(c.Query("top", "5"))
 		if err != nil {
 			log.Printf("wrong \"top\" search parameter (%v)\n", top)
 			return fiber.ErrBadRequest
 		}
-		log.Printf("\"top\"=%d", top)
+
+		log.Printf("SearchGames startswith=%s top=%d", prefix, top)
 
 		res, err := client.Keys(context.Background(), fmt.Sprintf("game:%s*", prefix)).Result()
 		if err != nil {
@@ -53,6 +53,8 @@ func SearchGames(client *redis.Client) fiber.Handler {
 			log.Printf("failed to marshal games: %v\n", err)
 			return fiber.ErrInternalServerError
 		}
+
+		log.Printf("SearchGames result: %s", string(data))
 
 		c.WriteString(string(data))
 		return nil
