@@ -28,6 +28,8 @@ func main() {
 
 	app.Get("/avgonline/games/:game", handlers.AvgGameViews(client))
 	app.Get("/avgonline/streamers/:streamer", handlers.AvgStreamerViews(client))
+	app.Get("/search/games", handlers.SearchGames(client))
+	app.Get("/search/streamers", handlers.SearchStreamers(client))
 
 	log.Fatal(app.Listen(cfg.HTTP.Address))
 }
