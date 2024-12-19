@@ -7,6 +7,7 @@ import (
 	"twitch-data-api/internal/handlers"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/joho/godotenv"
 )
 
@@ -25,6 +26,10 @@ func main() {
 	}
 
 	app := fiber.New()
+
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: []string{"http://localhost:3000"},
+	}))
 
 	app.Get("/avgonline/games/:game", handlers.AvgGameViews(client))
 	app.Get("/avgonline/streamers/:streamer", handlers.AvgStreamerViews(client))
