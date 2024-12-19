@@ -16,6 +16,32 @@ var (
 )
 
 func Aggregate(cfg *config.Config, conn driver.Conn, client *redis.Client) {
+	games, err := clickhouse.GetAllGames(conn)
+	if err != nil {
+		log.Printf("failed to get all games: %v\n", err)
+	} else {
+		m := make(map[string]interface{}, len(games))
+		for _, v := range games {
+			m[fmt.Sprintf("game:%s", v)] = true
+		}
+		if err := client.MSet(context.Background(), m).Err(); err != nil {
+			log.Printf("failed to save all games: %v\n", err)
+		}
+	}
+
+	streamers, err := clickhouse.GetAllStreamers(conn)
+	if err != nil {
+		log.Printf("failed to get all streamers: %v\n", err)
+	} else {
+		m := make(map[string]interface{}, len(streamers))
+		for _, v := range streamers {
+			m[fmt.Sprintf("streamer:%s", v)] = true
+		}
+		if err := client.MSet(context.Background(), m).Err(); err != nil {
+			log.Printf("failed to save all streamers: %v\n", err)
+		}
+	}
+
 	for _, days := range periods {
 		gamesAvgViewers, err := clickhouse.GetGameAvgViewerCountForNDays(conn, days)
 		if err != nil {
