@@ -12,10 +12,11 @@ import (
 )
 
 type SearchGamesResponse struct {
-	Data []string `json:"data"`
+	Games     []string `json:"data"`
+	Streamers []string `json:"streamers"`
 }
 
-func SearchGames(client *redis.Client) fiber.Handler {
+func Search(client *redis.Client) fiber.Handler {
 	return func(c fiber.Ctx) error {
 		prefix := c.Query("startswith")
 		if prefix == "" {
@@ -31,30 +32,46 @@ func SearchGames(client *redis.Client) fiber.Handler {
 
 		log.Printf("SearchGames startswith=%s top=%d", prefix, top)
 
-		res, err := client.Keys(context.Background(), fmt.Sprintf("game:%s*", prefix)).Result()
+		games, err := client.Keys(context.Background(), fmt.Sprintf("game:%s*", prefix)).Result()
 		if err != nil {
 			log.Printf("failed to search games: %v\n", err)
 			return fiber.ErrInternalServerError
 		}
 
-		for i, v := range res {
-			res[i] = v[5:]
+		for i, v := range games {
+			games[i] = v[5:] // remove "game:" from key
+		}
+
+		streamers, err := client.Keys(context.Background(), fmt.Sprintf("streamer:%s*", prefix)).Result()
+		if err != nil {
+			log.Printf("failed to search games: %v\n", err)
+			return fiber.ErrInternalServerError
+		}
+
+		for i, v := range streamers {
+			streamers[i] = v[5:] // remove "streamer:" from key
 		}
 
 		sgr := SearchGamesResponse{}
-		if len(res) > top {
-			sgr.Data = res[:top]
+		if len(games) > top {
+			sgr.Games = games[:top]
 		} else {
-			sgr.Data = res
+			sgr.Games = games
+		}
+
+		if len(streamers) > top {
+			sgr.Streamers = streamers[:top]
+		} else {
+			sgr.Streamers = streamers
 		}
 
 		data, err := json.Marshal(sgr)
 		if err != nil {
-			log.Printf("failed to marshal games: %v\n", err)
+			log.Printf("failed to marshal search results: %v\n", err)
 			return fiber.ErrInternalServerError
 		}
 
-		log.Printf("SearchGames result: %s", string(data))
+		log.Printf("Search result: %s", string(data))
 
 		c.WriteString(string(data))
 		return nil

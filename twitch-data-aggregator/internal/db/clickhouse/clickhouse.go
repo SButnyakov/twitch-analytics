@@ -59,7 +59,7 @@ func Connect(cfg *config.Config) (driver.Conn, error) {
 		language String,
 		timestamp DateTime('Europe/London')
 	) ENGINE = MergeTree()
-	ORDER BY (id);
+	ORDER BY (username, game_name, timestamp);
 	`
 
 	err = conn.Exec(context.Background(), createTableQuery)

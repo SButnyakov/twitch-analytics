@@ -18,7 +18,7 @@ var (
 
 func Aggregate(cfg *config.Config, conn driver.Conn, client *redis.Client) {
 	var wg sync.WaitGroup
-	wg.Add(4)
+	wg.Add(6)
 	go func() {
 		games, err := clickhouse.GetAllGames(conn)
 		if err != nil {
@@ -56,6 +56,7 @@ func Aggregate(cfg *config.Config, conn driver.Conn, client *redis.Client) {
 			gamesAvgViewers, err := clickhouse.GetGameAvgViewerCountForNDays(conn, days)
 			if err != nil {
 				log.Printf("failed to get average games online for %d days: %v\n", days, err)
+				continue
 			}
 
 			m := make(map[string]interface{}, len(gamesAvgViewers))
@@ -65,6 +66,7 @@ func Aggregate(cfg *config.Config, conn driver.Conn, client *redis.Client) {
 
 			if err := client.MSet(context.Background(), m).Err(); err != nil {
 				log.Printf("failed to save average games online for %d days: %v\n", days, err)
+				continue
 			}
 
 			log.Printf("average games online for %d days saved\n", days)
@@ -77,6 +79,7 @@ func Aggregate(cfg *config.Config, conn driver.Conn, client *redis.Client) {
 			streamersAvgViewers, err := clickhouse.GetStreamerAvgViewerCountForNDays(conn, days)
 			if err != nil {
 				log.Printf("failed to get average streamers online for %d days: %v\n", days, err)
+				continue
 			}
 
 			m := make(map[string]interface{}, len(streamersAvgViewers))
@@ -86,9 +89,58 @@ func Aggregate(cfg *config.Config, conn driver.Conn, client *redis.Client) {
 
 			if err := client.MSet(context.Background(), m).Err(); err != nil {
 				log.Printf("failed to save average streamers online for %d days: %v\n", days, err)
+				continue
 			}
 
 			log.Printf("average streamers online for %d days saved\n", days)
+		}
+		wg.Done()
+	}()
+
+	go func() {
+		for _, days := range periods {
+			gamesTimepoints, err := clickhouse.GetGamesOnlineTimepointsForNDays(conn, days)
+			if err != nil {
+				log.Printf("failed to get games online timepoints for %d days: %v\n", days, err)
+				continue
+			}
+
+			m := make(map[string]interface{}, len(gamesTimepoints))
+			for k, v := range gamesTimepoints {
+				m[fmt.Sprintf("games_online_timepoints:%d:%s", days, k)] = v
+			}
+
+			if err := client.MSet(context.Background(), m).Err(); err != nil {
+				log.Printf("failed to save games online timepoints for %d days: %v\n", days, err)
+				continue
+			}
+
+			log.Printf("games online timepoints for %d days saved\n", days)
+		}
+		wg.Done()
+	}()
+
+	go func() {
+		for _, days := range periods {
+			streamersTimepoints, err := clickhouse.GetStreamersOnlineTimepointsForNDays(conn, days)
+			if err != nil {
+				log.Printf("failed to get streamers online timepoints for %d days: %v\n", days, err)
+				continue
+			}
+
+			m := make(map[string]interface{}, len(streamersTimepoints))
+			for k, v := range streamersTimepoints {
+				m[fmt.Sprintf("streamers_online_timepoints:%d:%s", days, k)] = v
+				if len(m) == 100000 {
+					if err := client.MSet(context.Background(), m).Err(); err != nil {
+						log.Printf("failed to save streamers online timepoints for %d days: %v\n", days, err)
+						continue
+					}
+					clear(m)
+				}
+			}
+
+			log.Printf("streamers online timepoints for %d days saved\n", days)
 		}
 		wg.Done()
 	}()

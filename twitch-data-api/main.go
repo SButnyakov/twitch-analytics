@@ -33,8 +33,9 @@ func main() {
 
 	app.Get("/avgonline/games/:game", handlers.AvgGameViews(client))
 	app.Get("/avgonline/streamers/:streamer", handlers.AvgStreamerViews(client))
-	app.Get("/search/games", handlers.SearchGames(client))
-	app.Get("/search/streamers", handlers.SearchStreamers(client))
+	app.Get("/timepoints/games/:game", handlers.GameOnlineTimepoints(client))
+	app.Get("/timepoints/streamers/:streamer", handlers.StreamerOnlineTimepoints(client))
+	app.Get("/search", handlers.Search(client))
 
 	log.Fatal(app.Listen(cfg.HTTP.Address))
 }
