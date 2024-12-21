@@ -21,7 +21,7 @@ type DataUnit struct {
 	Name string `json:"name"`
 }
 
-func Search(client *redis.Client) fiber.Handler {
+func Search(gClient *redis.Client, sClient *redis.Client) fiber.Handler {
 	return func(c fiber.Ctx) error {
 		q := c.Query("q")
 		if q == "" {
@@ -37,16 +37,32 @@ func Search(client *redis.Client) fiber.Handler {
 
 		log.Printf("SearchGames q=%s top=%d", q, top)
 
-		gamesKeys, err := client.Keys(context.Background(), fmt.Sprintf("game:%s*", q)).Result()
-		if err != nil {
-			log.Printf("failed to search games: %v\n", err)
-			return fiber.ErrInternalServerError
+		gamesKeys := make([]string, 0, top)
+		cursor := uint64(0)
+		for {
+			res, nextCursor, err := gClient.Scan(context.Background(), cursor, fmt.Sprintf("game:%s*", q), 10000).Result()
+			if err != nil {
+				log.Printf("failed to search games: %v\n", err)
+				return fiber.ErrInternalServerError
+			}
+			gamesKeys = append(gamesKeys, res...)
+
+			if len(gamesKeys) >= top {
+				gamesKeys = gamesKeys[:top]
+				break
+			}
+
+			cursor = nextCursor
+			if cursor == 0 {
+				break
+			}
 		}
+
 		log.Println(gamesKeys)
 
 		var gamesIds []interface{}
 		if len(gamesKeys) > 0 {
-			gamesIds, err = client.MGet(context.Background(), gamesKeys...).Result()
+			gamesIds, err = gClient.MGet(context.Background(), gamesKeys...).Result()
 			if err != nil {
 				log.Printf("failed to search games ids: %v\n", err)
 				return fiber.ErrInternalServerError
@@ -57,16 +73,30 @@ func Search(client *redis.Client) fiber.Handler {
 			gamesKeys[i] = v[5:] // remove "game:" from key
 		}
 
-		streamersKeys, err := client.Keys(context.Background(), fmt.Sprintf("streamer:%s*", q)).Result()
-		if err != nil {
-			log.Printf("failed to search games: %v\n", err)
-			return fiber.ErrInternalServerError
+		streamersKeys := make([]string, 0, top)
+		cursor = uint64(0)
+		for {
+			res, nextCursor, err := sClient.Scan(context.Background(), cursor, fmt.Sprintf("streamer:%s*", q), 10000).Result()
+			if err != nil {
+				log.Printf("failed to search games: %v\n", err)
+				return fiber.ErrInternalServerError
+			}
+			streamersKeys = append(streamersKeys, res...)
+
+			if len(streamersKeys) >= top {
+				streamersKeys = streamersKeys[:top]
+				break
+			}
+
+			cursor = nextCursor
+			if cursor == 0 {
+				break
+			}
 		}
 
 		var streamersIds []interface{}
-
 		if len(streamersKeys) > 0 {
-			streamersIds, err = client.MGet(context.Background(), streamersKeys...).Result()
+			streamersIds, err = sClient.MGet(context.Background(), streamersKeys...).Result()
 			if err != nil {
 				log.Printf("failed to search streamers ids: %v\n", err)
 				return fiber.ErrInternalServerError

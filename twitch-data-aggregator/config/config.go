@@ -25,9 +25,14 @@ type Clickhouse struct {
 }
 
 type Redis struct {
-	Address  string `env:"REDIS_ADDR" env-default:"localhost:6379"`
-	Password string `env:"REDIS_PASSWORD" env-default:""`
-	Database int    `env:"REDIS_DATABASE" env-default:"0"`
+	Address             string `env:"REDIS_ADDR" env-default:"localhost:6379"`
+	Password            string `env:"REDIS_PASSWORD" env-default:""`
+	Games               int    `env:"REDIS_GAMES" env-default:"0"`
+	Streamers           int    `env:"REDIS_STREAMERS" env-default:"1"`
+	GamesAvgOnline      int    `env:"REDIS_GAMES_AVG_ONLINE" env-default:"2"`
+	StreamersAvgOnline  int    `env:"REDIS_STREAMERS_AVG_ONLINE" env-default:"3"`
+	GamesTimepoints     int    `env:"REDIS_GAMES_TIMEPOINTS" env-default:"4"`
+	StreamersTimepoints int    `env:"REDIS_STREAMERS_TIMEPOINTS" env-default:"5"`
 }
 
 func MustLoad() *Config {

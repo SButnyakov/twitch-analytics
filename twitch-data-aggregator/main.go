@@ -32,13 +32,13 @@ func main() {
 	}
 	defer conn.Close()
 
-	client, err := redis.Connect(cfg)
+	clients, err := redis.Connect(cfg)
 	if err != nil {
 		panic(err)
 	}
 
 	start := time.Now()
-	aggregator.Aggregate(cfg, conn, client)
+	aggregator.Aggregate(cfg, conn, clients)
 	log.Printf("aggregation took %s\n", time.Since(start))
 
 	messageChan := make(chan kafka.Message)
@@ -65,7 +65,7 @@ func main() {
 
 			if msg.IsFinished {
 				start = time.Now()
-				aggregator.Aggregate(cfg, conn, client)
+				aggregator.Aggregate(cfg, conn, clients)
 				log.Printf("aggregation took %s\n", time.Since(start))
 			}
 		}

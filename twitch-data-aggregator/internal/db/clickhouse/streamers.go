@@ -34,7 +34,7 @@ func GetAllStreamers(conn driver.Conn) ([]Streamer, error) {
 	for rows.Next() {
 		var streamer Streamer
 
-		if err := rows.Scan(&streamer.Id, streamer.Name); err != nil {
+		if err := rows.Scan(&streamer.Id, &streamer.Name); err != nil {
 			return nil, err
 		}
 

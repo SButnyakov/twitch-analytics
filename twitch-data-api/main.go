@@ -20,7 +20,7 @@ func main() {
 	cfg := config.MustLoad()
 	log.Println(cfg)
 
-	client, err := redis.Connect(cfg)
+	clients, err := redis.Connect(cfg)
 	if err != nil {
 		panic(err)
 	}
@@ -31,11 +31,11 @@ func main() {
 		AllowOrigins: []string{"http://localhost:3000"},
 	}))
 
-	app.Get("/avgonline/games/:game", handlers.AvgGameViews(client))
-	app.Get("/avgonline/streamers/:streamer", handlers.AvgStreamerViews(client))
-	app.Get("/timepoints/games/:game", handlers.GameOnlineTimepoints(client))
-	app.Get("/timepoints/streamers/:streamer", handlers.StreamerOnlineTimepoints(client))
-	app.Get("/search", handlers.Search(client))
+	app.Get("/avgonline/games/:game", handlers.AvgGameViews(clients[cfg.GamesAvgOnline]))
+	app.Get("/avgonline/streamers/:streamer", handlers.AvgStreamerViews(clients[cfg.StreamersAvgOnline]))
+	app.Get("/timepoints/games/:game", handlers.GameOnlineTimepoints(clients[cfg.GamesTimepoints]))
+	app.Get("/timepoints/streamers/:streamer", handlers.StreamerOnlineTimepoints(clients[cfg.StreamersTimepoints]))
+	app.Get("/search", handlers.Search(clients[cfg.Games], clients[cfg.Streamers]))
 
 	log.Fatal(app.Listen(cfg.HTTP.Address))
 }
