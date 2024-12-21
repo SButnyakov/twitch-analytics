@@ -23,9 +23,9 @@ type DataUnit struct {
 
 func Search(client *redis.Client) fiber.Handler {
 	return func(c fiber.Ctx) error {
-		q := c.Query("q")
-		if q == "" {
-			log.Printf("empty \"q\" search parameter\n")
+		prefix := c.Query("startswith")
+		if prefix == "" {
+			log.Printf("empty \"startswith\" search parameter\n")
 			return fiber.ErrBadRequest
 		}
 
@@ -35,9 +35,9 @@ func Search(client *redis.Client) fiber.Handler {
 			return fiber.ErrBadRequest
 		}
 
-		log.Printf("Search q=%s top=%d", q, top)
+		log.Printf("SearchGames startswith=%s top=%d", prefix, top)
 
-		gamesKeys, err := client.Keys(context.Background(), fmt.Sprintf("game:%s*", q)).Result()
+		gamesKeys, err := client.Keys(context.Background(), fmt.Sprintf("game:%s*", prefix)).Result()
 		if err != nil {
 			log.Printf("failed to search games: %v\n", err)
 			return fiber.ErrInternalServerError
@@ -53,7 +53,7 @@ func Search(client *redis.Client) fiber.Handler {
 			gamesKeys[i] = v[5:] // remove "game:" from key
 		}
 
-		streamersKeys, err := client.Keys(context.Background(), fmt.Sprintf("streamer:%s*", q)).Result()
+		streamersKeys, err := client.Keys(context.Background(), fmt.Sprintf("streamer:%s*", prefix)).Result()
 		if err != nil {
 			log.Printf("failed to search games: %v\n", err)
 			return fiber.ErrInternalServerError
