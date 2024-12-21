@@ -34,7 +34,6 @@ func Connect(cfg *config.Config) (*kafka.Conn, error) {
 func WriteStreamsMessage(cfg *config.Config, conn *kafka.Conn, streams map[string]endpoints.Stream) {
 	streamsArr := make([]StreamsJSONMessage, 0, len(streams))
 	for _, v := range streams {
-		log.Println(v.ViewerCount)
 		streamsArr = append(streamsArr, streamsToStreamJSONMessage(v))
 	}
 
