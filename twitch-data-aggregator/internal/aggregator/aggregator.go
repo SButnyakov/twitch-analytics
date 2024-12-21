@@ -28,6 +28,7 @@ func Aggregate(cfg *config.Config, conn driver.Conn, client *redis.Client) {
 			for _, v := range games {
 				m[fmt.Sprintf("game:%s", v.Name)] = v.Id
 			}
+			log.Println(m)
 			if err := client.MSet(context.Background(), m).Err(); err != nil {
 				log.Printf("failed to save all games: %v\n", err)
 			}

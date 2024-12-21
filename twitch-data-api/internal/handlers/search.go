@@ -62,7 +62,6 @@ func Search(client *redis.Client) fiber.Handler {
 			log.Printf("failed to search games: %v\n", err)
 			return fiber.ErrInternalServerError
 		}
-		log.Println(streamersKeys)
 
 		var streamersIds []interface{}
 
@@ -79,12 +78,10 @@ func Search(client *redis.Client) fiber.Handler {
 		}
 
 		sgr := SearchGamesResponse{}
-		log.Println(len(gamesKeys), len(streamersKeys))
 		for i := 0; i < top; i++ {
 			if i == len(gamesKeys) {
 				break
 			}
-			log.Println("appending", DataUnit{Id: gamesIds[i].(string), Name: gamesKeys[i]})
 			sgr.Games = append(sgr.Games, DataUnit{Id: gamesIds[i].(string), Name: gamesKeys[i]})
 		}
 
@@ -94,8 +91,6 @@ func Search(client *redis.Client) fiber.Handler {
 			}
 			sgr.Streamers = append(sgr.Streamers, DataUnit{Id: streamersIds[i].(string), Name: streamersKeys[i]})
 		}
-
-		log.Println(sgr)
 
 		data, err := json.Marshal(sgr)
 		if err != nil {
