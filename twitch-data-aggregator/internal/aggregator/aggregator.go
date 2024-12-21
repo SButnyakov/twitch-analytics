@@ -31,6 +31,13 @@ func Aggregate(cfg *config.Config, conn driver.Conn, clients []*redis.Client) {
 			if err := clients[cfg.Games].MSet(context.Background(), m).Err(); err != nil {
 				log.Printf("failed to save all games: %v\n", err)
 			}
+			clear(m)
+			for _, v := range games {
+				m[fmt.Sprintf("game:%s", v.Id)] = v.Name
+			}
+			if err := clients[cfg.Games].MSet(context.Background(), m).Err(); err != nil {
+				log.Printf("failed to save all games: %v\n", err)
+			}
 		}
 		wg.Done()
 	}()
@@ -43,6 +50,13 @@ func Aggregate(cfg *config.Config, conn driver.Conn, clients []*redis.Client) {
 			m := make(map[string]interface{}, len(streamers))
 			for _, v := range streamers {
 				m[fmt.Sprintf("streamer:%s", v.Name)] = v.Id
+			}
+			if err := clients[cfg.Streamers].MSet(context.Background(), m).Err(); err != nil {
+				log.Printf("failed to save all streamers: %v\n", err)
+			}
+			clear(m)
+			for _, v := range streamers {
+				m[fmt.Sprintf("streamer:%s", v.Id)] = v.Name
 			}
 			if err := clients[cfg.Streamers].MSet(context.Background(), m).Err(); err != nil {
 				log.Printf("failed to save all streamers: %v\n", err)
