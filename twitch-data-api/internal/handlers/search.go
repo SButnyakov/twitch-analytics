@@ -12,8 +12,13 @@ import (
 )
 
 type SearchGamesResponse struct {
-	Games     []string `json:"data"`
-	Streamers []string `json:"streamers"`
+	Games     []DataUnit `json:"games"`
+	Streamers []DataUnit `json:"streamers"`
+}
+
+type DataUnit struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
 }
 
 func Search(client *redis.Client) fiber.Handler {
@@ -32,37 +37,51 @@ func Search(client *redis.Client) fiber.Handler {
 
 		log.Printf("SearchGames startswith=%s top=%d", prefix, top)
 
-		games, err := client.Keys(context.Background(), fmt.Sprintf("game:%s*", prefix)).Result()
+		gamesKeys, err := client.Keys(context.Background(), fmt.Sprintf("game:%s*", prefix)).Result()
 		if err != nil {
 			log.Printf("failed to search games: %v\n", err)
 			return fiber.ErrInternalServerError
 		}
 
-		for i, v := range games {
-			games[i] = v[5:] // remove "game:" from key
+		gamesIds, err := client.MGet(context.Background(), gamesKeys...).Result()
+		if err != nil {
+			log.Printf("failed to search games ids: %v\n", err)
+			return fiber.ErrInternalServerError
 		}
 
-		streamers, err := client.Keys(context.Background(), fmt.Sprintf("streamer:%s*", prefix)).Result()
+		for i, v := range gamesKeys {
+			gamesKeys[i] = v[5:] // remove "game:" from key
+		}
+
+		streamersKeys, err := client.Keys(context.Background(), fmt.Sprintf("streamer:%s*", prefix)).Result()
 		if err != nil {
 			log.Printf("failed to search games: %v\n", err)
 			return fiber.ErrInternalServerError
 		}
 
-		for i, v := range streamers {
-			streamers[i] = v[5:] // remove "streamer:" from key
+		streamersIds, err := client.MGet(context.Background(), streamersKeys...).Result()
+		if err != nil {
+			log.Printf("failed to search streamers ids: %v\n", err)
+			return fiber.ErrInternalServerError
+		}
+
+		for i, v := range streamersKeys {
+			streamersKeys[i] = v[5:] // remove "streamer:" from key
 		}
 
 		sgr := SearchGamesResponse{}
-		if len(games) > top {
-			sgr.Games = games[:top]
-		} else {
-			sgr.Games = games
+		for i := 0; i < top; i++ {
+			if i == len(gamesKeys) {
+				break
+			}
+			sgr.Games = append(sgr.Games, DataUnit{Id: gamesIds[i].(string), Name: gamesKeys[i]})
 		}
 
-		if len(streamers) > top {
-			sgr.Streamers = streamers[:top]
-		} else {
-			sgr.Streamers = streamers
+		for i := 0; i < top; i++ {
+			if i == len(streamersKeys) {
+				break
+			}
+			sgr.Games = append(sgr.Streamers, DataUnit{Id: streamersIds[i].(string), Name: streamersKeys[i]})
 		}
 
 		data, err := json.Marshal(sgr)

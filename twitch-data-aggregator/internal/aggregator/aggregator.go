@@ -61,7 +61,7 @@ func Aggregate(cfg *config.Config, conn driver.Conn, client *redis.Client) {
 
 			m := make(map[string]interface{}, len(gamesAvgViewers))
 			for _, v := range gamesAvgViewers {
-				m[fmt.Sprintf("average_game_online:%d:%s", days, v.Game)] = v.ViewersCount
+				m[fmt.Sprintf("average_game_online:%d:%s", days, v.Id)] = v.ViewersCount
 			}
 
 			if err := client.MSet(context.Background(), m).Err(); err != nil {
@@ -84,7 +84,7 @@ func Aggregate(cfg *config.Config, conn driver.Conn, client *redis.Client) {
 
 			m := make(map[string]interface{}, len(streamersAvgViewers))
 			for _, v := range streamersAvgViewers {
-				m[fmt.Sprintf("average_streamer_online:%d:%s", days, v.Game)] = v.ViewersCount
+				m[fmt.Sprintf("average_streamer_online:%d:%s", days, v.Id)] = v.ViewersCount
 			}
 
 			if err := client.MSet(context.Background(), m).Err(); err != nil {
