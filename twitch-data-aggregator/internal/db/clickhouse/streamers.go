@@ -9,14 +9,19 @@ import (
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 )
 
+type Streamer struct {
+	Id   string
+	Name string
+}
+
 type StreamerAvgViewers struct {
-	Name         string
+	Id           string
 	ViewersCount uint32
 }
 
-func GetAllStreamers(conn driver.Conn) ([]string, error) {
+func GetAllStreamers(conn driver.Conn) ([]Streamer, error) {
 	start := time.Now()
-	query := "SELECT DISTINCT username FROM twitch"
+	query := "SELECT DISTINCT user_id, username FROM twitch"
 
 	rows, err := conn.Query(context.Background(), query)
 	if err != nil {
@@ -24,33 +29,33 @@ func GetAllStreamers(conn driver.Conn) ([]string, error) {
 	}
 	defer rows.Close()
 
-	res := make([]string, 0)
+	res := make([]Streamer, 0)
 
 	for rows.Next() {
-		var gamename string
+		var streamer Streamer
 
-		if err := rows.Scan(&gamename); err != nil {
+		if err := rows.Scan(&streamer.Id, streamer.Name); err != nil {
 			return nil, err
 		}
 
-		res = append(res, gamename)
+		res = append(res, streamer)
 	}
 	log.Printf("GetAllStreamers took %s\n", time.Since(start))
 	return res, nil
 }
 
-func GetStreamerAvgViewerCountForNDays(conn driver.Conn, days int) ([]GameAvgViewers, error) {
+func GetStreamerAvgViewerCountForNDays(conn driver.Conn, days int) ([]StreamerAvgViewers, error) {
 	start := time.Now()
 	query := `
 	SELECT 
-		username, 
+		user_id, 
 		AVG(viewers_count) AS avg_viewers_count
 	FROM
 		twitch
 	WHERE
 		timestamp >= toTimeZone(now(), 'Europe/London') - INTERVAL (?) DAY
 	GROUP BY
-		username;
+		user_id;
 	`
 
 	rows, err := conn.Query(context.Background(), query, days)
@@ -59,22 +64,22 @@ func GetStreamerAvgViewerCountForNDays(conn driver.Conn, days int) ([]GameAvgVie
 	}
 	defer rows.Close()
 
-	res := make([]GameAvgViewers, 0)
+	res := make([]StreamerAvgViewers, 0)
 
 	for rows.Next() {
-		var game GameAvgViewers
+		var streamer StreamerAvgViewers
 		var avgViewers float64
 
-		if err := rows.Scan(&game.Game, &avgViewers); err != nil {
+		if err := rows.Scan(&streamer.Id, &avgViewers); err != nil {
 			return nil, err
 		}
 
-		game.ViewersCount = uint32(avgViewers)
+		streamer.ViewersCount = uint32(avgViewers)
 
-		res = append(res, game)
+		res = append(res, streamer)
 	}
 
-	log.Printf("GetGameAvgViewerCountFor%dDays took %s\n", days, time.Since(start))
+	log.Printf("GetStreamerAvgViewerCountFor%dDays took %s\n", days, time.Since(start))
 
 	return res, nil
 }
@@ -83,7 +88,7 @@ func GetStreamersOnlineTimepointsForNDays(conn driver.Conn, days int) (map[strin
 	start := time.Now()
 	query := `
 		SELECT 
-			username,
+			user_id,
 			toStartOfMinute(timestamp) AS minute,
 			SUM(viewers_count) AS total_viewers
 		FROM 
@@ -91,9 +96,9 @@ func GetStreamersOnlineTimepointsForNDays(conn driver.Conn, days int) (map[strin
 		WHERE 
 			timestamp >= toTimeZone(now(), 'Europe/London') - INTERVAL (?) DAY
 		GROUP BY 
-			username, minute
+			user_id, minute
 		ORDER BY 
-			username, minute;
+			user_id, minute;
 	`
 
 	rows, err := conn.Query(context.Background(), query, days)
@@ -105,18 +110,18 @@ func GetStreamersOnlineTimepointsForNDays(conn driver.Conn, days int) (map[strin
 	res := make(map[string]models.OnlineTimepoints, 0)
 
 	for rows.Next() {
-		var streamer string
+		var streamer_id string
 		var online uint64
 		var timestamp time.Time
 
-		if err := rows.Scan(&streamer, &timestamp, &online); err != nil {
+		if err := rows.Scan(&streamer_id, &timestamp, &online); err != nil {
 			return nil, err
 		}
 
-		v := res[streamer]
+		v := res[streamer_id]
 		vArr := append(v.Data, models.OnlineTimepoint{Online: online, Timestamp: timestamp})
 		v.Data = vArr
-		res[streamer] = v
+		res[streamer_id] = v
 	}
 
 	log.Printf("GetStreamersOnlineTimepointsFor%dDays took %s\n", days, time.Since(start))

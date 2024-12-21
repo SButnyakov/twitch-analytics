@@ -26,7 +26,7 @@ func Aggregate(cfg *config.Config, conn driver.Conn, client *redis.Client) {
 		} else {
 			m := make(map[string]interface{}, len(games))
 			for _, v := range games {
-				m[fmt.Sprintf("game:%s", v)] = true
+				m[fmt.Sprintf("game:%s", v.Name)] = v.Id
 			}
 			if err := client.MSet(context.Background(), m).Err(); err != nil {
 				log.Printf("failed to save all games: %v\n", err)
@@ -42,7 +42,7 @@ func Aggregate(cfg *config.Config, conn driver.Conn, client *redis.Client) {
 		} else {
 			m := make(map[string]interface{}, len(streamers))
 			for _, v := range streamers {
-				m[fmt.Sprintf("streamer:%s", v)] = true
+				m[fmt.Sprintf("streamer:%s", v.Name)] = v.Id
 			}
 			if err := client.MSet(context.Background(), m).Err(); err != nil {
 				log.Printf("failed to save all streamers: %v\n", err)
