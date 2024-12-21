@@ -42,11 +42,15 @@ func Search(client *redis.Client) fiber.Handler {
 			log.Printf("failed to search games: %v\n", err)
 			return fiber.ErrInternalServerError
 		}
+		log.Println(gamesKeys)
 
-		gamesIds, err := client.MGet(context.Background(), gamesKeys...).Result()
-		if err != nil {
-			log.Printf("failed to search games ids: %v\n", err)
-			return fiber.ErrInternalServerError
+		var gamesIds []interface{}
+		if len(gamesKeys) > 0 {
+			gamesIds, err = client.MGet(context.Background(), gamesKeys...).Result()
+			if err != nil {
+				log.Printf("failed to search games ids: %v\n", err)
+				return fiber.ErrInternalServerError
+			}
 		}
 
 		for i, v := range gamesKeys {
@@ -58,11 +62,16 @@ func Search(client *redis.Client) fiber.Handler {
 			log.Printf("failed to search games: %v\n", err)
 			return fiber.ErrInternalServerError
 		}
+		log.Println(streamersKeys)
 
-		streamersIds, err := client.MGet(context.Background(), streamersKeys...).Result()
-		if err != nil {
-			log.Printf("failed to search streamers ids: %v\n", err)
-			return fiber.ErrInternalServerError
+		var streamersIds []interface{}
+
+		if len(streamersKeys) > 0 {
+			streamersIds, err = client.MGet(context.Background(), streamersKeys...).Result()
+			if err != nil {
+				log.Printf("failed to search streamers ids: %v\n", err)
+				return fiber.ErrInternalServerError
+			}
 		}
 
 		for i, v := range streamersKeys {
@@ -70,10 +79,12 @@ func Search(client *redis.Client) fiber.Handler {
 		}
 
 		sgr := SearchGamesResponse{}
+		log.Println(len(gamesKeys), len(streamersKeys))
 		for i := 0; i < top; i++ {
 			if i == len(gamesKeys) {
 				break
 			}
+			log.Println("appending", DataUnit{Id: gamesIds[i].(string), Name: gamesKeys[i]})
 			sgr.Games = append(sgr.Games, DataUnit{Id: gamesIds[i].(string), Name: gamesKeys[i]})
 		}
 
@@ -81,8 +92,10 @@ func Search(client *redis.Client) fiber.Handler {
 			if i == len(streamersKeys) {
 				break
 			}
-			sgr.Games = append(sgr.Streamers, DataUnit{Id: streamersIds[i].(string), Name: streamersKeys[i]})
+			sgr.Streamers = append(sgr.Streamers, DataUnit{Id: streamersIds[i].(string), Name: streamersKeys[i]})
 		}
+
+		log.Println(sgr)
 
 		data, err := json.Marshal(sgr)
 		if err != nil {
