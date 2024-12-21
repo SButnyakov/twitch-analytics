@@ -104,7 +104,7 @@ func Search(gClient *redis.Client, sClient *redis.Client) fiber.Handler {
 		}
 
 		for i, v := range streamersKeys {
-			streamersKeys[i] = v[5:] // remove "streamer:" from key
+			streamersKeys[i] = v[9:] // remove "streamer:" from key
 		}
 
 		sgr := SearchGamesResponse{}
