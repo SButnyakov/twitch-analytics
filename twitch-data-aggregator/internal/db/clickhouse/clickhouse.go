@@ -77,6 +77,9 @@ func Insert(conn driver.Conn, streamsJSON []kafka.StreamsJSONMessage) error {
 	streams := streamsJSONToStreamData(streamsJSON)
 
 	for _, v := range streams {
+		if v.ViewersCount < 10 {
+			continue
+		}
 		query += "(?, ?, ?, ?, ?, ?, ?, ?),"
 		values = append(values, v.UserId, v.UserLogin, v.UserName, v.GameId, v.GameName, v.ViewersCount, v.Language, v.Timestamp)
 	}

@@ -8,6 +8,7 @@ type Config struct {
 	Auth
 	URLs
 	Kafka
+	FetchIntervalMins int `env:"FETCH_INTERVAL_MINS" env-default:"10"`
 }
 
 type Auth struct {

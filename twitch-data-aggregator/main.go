@@ -72,7 +72,7 @@ func main() {
 	}(messageChan, csvChan)
 
 	go func(writeChan chan kafka.Message) {
-		writer, file, err := lib.CreateCSVWriter(fmt.Sprintf("%s.csv", lib.TimeNowToString()))
+		writer, file, err := lib.CreateCSVWriter(fmt.Sprintf("%s/%s.csv", cfg.CSVS.SavePath, lib.TimeNowToString()))
 		if err != nil {
 			log.Printf("failed to create csv writer: %v", err)
 		}

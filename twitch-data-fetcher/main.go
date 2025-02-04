@@ -56,7 +56,7 @@ func main() {
 
 			log.Println("Message sent")
 		}()
-		time.Sleep(10 * time.Minute)
+		time.Sleep(time.Duration(cfg.FetchIntervalMins) * time.Minute)
 	}
 }
 

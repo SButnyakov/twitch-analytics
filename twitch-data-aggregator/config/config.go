@@ -8,6 +8,7 @@ type Config struct {
 	Kafka
 	Clickhouse
 	Redis
+	CSVS
 }
 
 type Kafka struct {
@@ -33,6 +34,10 @@ type Redis struct {
 	StreamersAvgOnline  int    `env:"REDIS_STREAMERS_AVG_ONLINE" env-default:"3"`
 	GamesTimepoints     int    `env:"REDIS_GAMES_TIMEPOINTS" env-default:"4"`
 	StreamersTimepoints int    `env:"REDIS_STREAMERS_TIMEPOINTS" env-default:"5"`
+}
+
+type CSVS struct {
+	SavePath string `env:"CSVS_SAVE_PATH" env-required:"true"`
 }
 
 func MustLoad() *Config {

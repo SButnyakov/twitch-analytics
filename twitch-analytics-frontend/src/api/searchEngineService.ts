@@ -22,3 +22,19 @@ export const fetchGamesAndStreamers = async (searchString: string, top: number) 
         throw new Error('Failed to fetch games and streams');
     }
 };
+
+export const fetchNameById = async (id: string, type: string) => {
+    try {
+        const response = await apiClient.get('/search', {
+            params: {
+                id: id,
+                t: type,
+            },
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error('Error fetcing data:', error);
+        throw new Error('Failed to fetch name by id');
+    }
+};

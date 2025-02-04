@@ -8,12 +8,7 @@ import (
 )
 
 func CreateCSVWriter(path string) (*csv.Writer, *os.File, error) {
-	wd, err := os.Getwd()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	file, err := os.Create(wd + "\\csvs\\" + path)
+	file, err := os.Create(path)
 	if err != nil {
 		return nil, nil, err
 	}
