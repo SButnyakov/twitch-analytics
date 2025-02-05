@@ -6,6 +6,7 @@ import (
 
 type Config struct {
 	Kafka
+	Elasticsearch
 	Clickhouse
 	Redis
 	CSVS
@@ -16,6 +17,10 @@ type Kafka struct {
 	GroupID   string `env:"KAFKA_GROUP_ID" env-default:"consumer-through-kafka 1"`
 	Topic     string `env:"KAFKA_TOPIC" env-default:"twitch-stream-data"`
 	Partition int    `env:"KAFKA_PARTITION" env-default:"0"`
+}
+
+type Elasticsearch struct {
+	Address string `env:"ELASTICSEARCH_ADDR" env-default:"http://localhost:9200"`
 }
 
 type Clickhouse struct {

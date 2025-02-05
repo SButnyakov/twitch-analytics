@@ -4,19 +4,25 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"time"
 	"twitch-data-aggregator/config"
 
 	"github.com/segmentio/kafka-go"
 )
 
 type StreamsJSONMessage struct {
-	UserId      string `json:"user_id"`
-	UserLogin   string `json:"user_login"`
-	UserName    string `json:"user_name"`
-	GameId      string `json:"game_id"`
-	GameName    string `json:"game_name"`
-	ViewerCount uint32 `json:"viewer_count"`
-	Language    string `json:"language"`
+	Id          string    `json:"id"`
+	UserId      string    `json:"user_id"`
+	UserLogin   string    `json:"user_login"`
+	UserName    string    `json:"user_name"`
+	GameId      string    `json:"game_id"`
+	GameName    string    `json:"game_name"`
+	ViewerCount uint32    `json:"viewer_count"`
+	Language    string    `json:"language"`
+	IsMature    bool      `json:"is_mature"`
+	Timestamp   time.Time `json:"timestamp"`
+	Type        string    `json:"type"`
+	StartedAt   time.Time `json:"started_at"`
 }
 
 type Message struct {

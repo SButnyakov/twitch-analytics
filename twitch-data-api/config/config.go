@@ -7,6 +7,7 @@ import (
 type Config struct {
 	HTTP
 	Redis
+	Clickhouse
 }
 
 type HTTP struct {
@@ -22,6 +23,13 @@ type Redis struct {
 	StreamersAvgOnline  int    `env:"REDIS_STREAMERS_AVG_ONLINE" env-default:"3"`
 	GamesTimepoints     int    `env:"REDIS_GAMES_TIMEPOINTS" env-default:"4"`
 	StreamersTimepoints int    `env:"REDIS_STREAMERS_TIMEPOINTS" env-default:"5"`
+}
+
+type Clickhouse struct {
+	Address  string `env:"CLICKHOUSE_ADDR" env-default:"clickhouse:9000"`
+	Database string `env:"CLICKHOUSE_DATABASE" env-default:"default"`
+	Username string `env:"CLICKHOUSE_USERNAME" env-default:"default"`
+	Password string `env:"CLICKHOUSE_PASSWORD" env-default:"default"`
 }
 
 func MustLoad() *Config {

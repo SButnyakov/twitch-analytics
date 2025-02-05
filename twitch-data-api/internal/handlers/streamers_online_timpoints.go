@@ -23,7 +23,8 @@ func StreamerOnlineTimepoints(client *redis.Client) fiber.Handler {
 		log.Printf("StreamerOnlineTimepoints %s %d\n", game, days)
 
 		res := client.Get(context.Background(), fmt.Sprintf("streamers_online_timepoints:%d:%s", days, game))
-		if res.Err() != nil {
+
+		if err := res.Err(); err != nil {
 			log.Printf("streamer not found: %v\n", err)
 			return fiber.ErrNotFound
 		}

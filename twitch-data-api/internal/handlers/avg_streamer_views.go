@@ -41,7 +41,7 @@ func AvgStreamerViews(client *redis.Client) fiber.Handler {
 
 		data, err := json.Marshal(response)
 		if err != nil {
-			log.Printf("failed to marhal response (%v): %v", response, err)
+			log.Printf("failed to marhal response (%v): %v\n", response, err)
 		}
 
 		c.WriteString(string(data))

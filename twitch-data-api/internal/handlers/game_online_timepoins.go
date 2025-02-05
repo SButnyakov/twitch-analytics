@@ -28,6 +28,8 @@ func GameOnlineTimepoints(client *redis.Client) fiber.Handler {
 			return fiber.ErrNotFound
 		}
 
+		log.Print(res.Val())
+
 		c.WriteString(res.Val())
 
 		return nil

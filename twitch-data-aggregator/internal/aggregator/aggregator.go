@@ -54,6 +54,7 @@ func Aggregate(cfg *config.Config, conn driver.Conn, clients []*redis.Client) {
 			if err := clients[cfg.Streamers].MSet(context.Background(), m).Err(); err != nil {
 				log.Printf("failed to save all streamers: %v\n", err)
 			}
+
 			clear(m)
 			for _, v := range streamers {
 				m[fmt.Sprintf("streamer:%s", v.Id)] = v.Name
@@ -151,6 +152,12 @@ func Aggregate(cfg *config.Config, conn driver.Conn, clients []*redis.Client) {
 						continue
 					}
 					clear(m)
+				}
+			}
+
+			if len(m) > 0 {
+				if err := clients[cfg.StreamersTimepoints].MSet(context.Background(), m).Err(); err != nil {
+					log.Printf("failed to save streamers online timepoints for %d days: %v\n", days, err)
 				}
 			}
 

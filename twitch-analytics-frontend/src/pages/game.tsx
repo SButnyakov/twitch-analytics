@@ -1,12 +1,23 @@
 import { useParams } from "react-router-dom";
 import UIPage from "../ui/UIPage/UIPage";
+import TimepointsGraph from "../components/TimepointsGraph.tsx/TimepointsGraph";
 
 const GamePage: React.FC = () => {
-    const { id } = useParams();
+    let { gid } = useParams();
+
+    if (gid === undefined) {
+        return (
+            <UIPage title='Game'>
+                <p>Анлак</p>
+            </UIPage>
+        )
+    }
 
     return (
         <UIPage title='Game'>
-            <h1>Игра с id {id}</h1>
+            <TimepointsGraph id={parseInt(gid)}  days={1} type='game'></TimepointsGraph>
+            <TimepointsGraph id={parseInt(gid)}  days={7} type='game'></TimepointsGraph>
+            <TimepointsGraph id={parseInt(gid)}  days={30} type='game'></TimepointsGraph>
         </UIPage>
     )
 }

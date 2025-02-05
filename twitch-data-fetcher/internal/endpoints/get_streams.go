@@ -19,20 +19,24 @@ type Stream struct {
 	Tags        []string
 	ViewerCount uint32
 	Language    string
+	IsMature    bool
+	StartedAt   time.Time
 	Timestamp   time.Time
 }
 
 type streamJSON struct {
-	Id          string   `json:"id"`
-	UserId      string   `json:"user_id"`
-	UserLogin   string   `json:"user_login"`
-	UserName    string   `json:"user_name"`
-	GameId      string   `json:"game_id"`
-	GameName    string   `json:"game_name"`
-	Type        string   `json:"type"`
-	Tags        []string `json:"tags"`
-	ViewerCount uint32   `json:"viewer_count"`
-	Language    string   `json:"language"`
+	Id          string    `json:"id"`
+	UserId      string    `json:"user_id"`
+	UserLogin   string    `json:"user_login"`
+	UserName    string    `json:"user_name"`
+	GameId      string    `json:"game_id"`
+	GameName    string    `json:"game_name"`
+	Type        string    `json:"type"`
+	Tags        []string  `json:"tags"`
+	ViewerCount uint32    `json:"viewer_count"`
+	Language    string    `json:"language"`
+	IsMature    bool      `json:"is_mature"`
+	StartedAt   time.Time `json:"started_at"`
 }
 
 type getStreamsResponse struct {
@@ -62,6 +66,9 @@ func GetStreams(cfg *config.Config) (map[string]Stream, error) {
 	for i := 0; i < len(languages); i++ {
 		streams := <-streamsChan
 		for _, stream := range streams {
+			if stream.ViewerCount < 10 {
+				continue
+			}
 			id, v := streamJSONtoStream(stream)
 			res[id] = v
 		}
@@ -93,9 +100,9 @@ func getStreams(cfg *config.Config, languageQuery string, streamsChan chan []str
 }
 
 func getStreamsRequest(cfg *config.Config, client *http.Client, languageQuery string, cursor string) (*getStreamsResponse, error) {
-	url := cfg.URLs.GetStreams
+	url := cfg.URLs.GetStreams + "?type=all&first=100&" + languageQuery
 	if cursor != "" {
-		url += "?type=live&first=100&" + languageQuery + "&after=" + cursor
+		url += "&after=" + cursor
 	}
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -145,6 +152,8 @@ func streamJSONtoStream(streamJSON streamJSON) (string, Stream) {
 		Tags:        streamJSON.Tags,
 		ViewerCount: streamJSON.ViewerCount,
 		Language:    streamJSON.Language,
+		IsMature:    streamJSON.IsMature,
+		StartedAt:   streamJSON.StartedAt,
 		Timestamp:   time.Now(),
 	}
 }

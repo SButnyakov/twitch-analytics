@@ -9,8 +9,8 @@ const AppRouter: React.FC = () => {
       <Router>
         <Routes>
           <Route path='/' element={<SearchPage/>} />
-          <Route path='/streamer/:id' element={<StreamerPage/>} />
-          <Route path='/game/:id' element={<GamePage/>} />
+          <Route path='/streamer/:sid' element={<StreamerPage/>} />
+          <Route path='/game/:gid' element={<GamePage/>} />
           <Route path='/*' element={<NotFoundPage/>} />
         </Routes>
       </Router>

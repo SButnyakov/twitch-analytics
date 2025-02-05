@@ -23,7 +23,7 @@ export const fetchGamesAndStreamers = async (searchString: string, top: number) 
     }
 };
 
-export const fetchNameById = async (id: string, type: string) => {
+export const fetchNameById = async (id: number, type: string) => {
     try {
         const response = await apiClient.get('/search', {
             params: {
@@ -38,3 +38,29 @@ export const fetchNameById = async (id: string, type: string) => {
         throw new Error('Failed to fetch name by id');
     }
 };
+
+export const fetchTimepoints = async (id: number, days: number, type: string) => {
+    try {
+        const response = await apiClient.get(`/timepoints/${type}s/${id}`, {
+            params: {
+                days: days
+            }
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        throw new Error('Failed to fetch game\'s timepoints for 7 days');
+    }
+}
+
+export const fetchStreamerStatsById = async (id: number) => {
+    try {
+        const response = await apiClient.get(`/stats/streamers/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetcing data:', error);
+        throw new Error('Failed to fetch name by id');
+    }
+};
+

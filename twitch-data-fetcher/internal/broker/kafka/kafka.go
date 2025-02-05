@@ -12,13 +12,18 @@ import (
 )
 
 type StreamsJSONMessage struct {
-	UserId      string `json:"user_id"`
-	UserLogin   string `json:"user_login"`
-	UserName    string `json:"user_name"`
-	GameId      string `json:"game_id"`
-	GameName    string `json:"game_name"`
-	ViewerCount uint32 `json:"viewer_count"`
-	Language    string `json:"language"`
+	Id          string    `json:"id"`
+	UserId      string    `json:"user_id"`
+	UserLogin   string    `json:"user_login"`
+	UserName    string    `json:"user_name"`
+	GameId      string    `json:"game_id"`
+	GameName    string    `json:"game_name"`
+	ViewerCount uint32    `json:"viewer_count"`
+	IsMature    bool      `json:"is_mature"`
+	Language    string    `json:"language"`
+	Type        string    `json:"type"`
+	StartedAt   time.Time `json:"started_at"`
+	Timestamp   time.Time `json:"timestamp"`
 }
 
 type Message struct {
@@ -33,8 +38,8 @@ func Connect(cfg *config.Config) (*kafka.Conn, error) {
 
 func WriteStreamsMessage(cfg *config.Config, conn *kafka.Conn, streams map[string]endpoints.Stream) {
 	streamsArr := make([]StreamsJSONMessage, 0, len(streams))
-	for _, v := range streams {
-		streamsArr = append(streamsArr, streamsToStreamJSONMessage(v))
+	for k, v := range streams {
+		streamsArr = append(streamsArr, streamsToStreamJSONMessage(k, v))
 	}
 
 	messages := make([]kafka.Message, 0)
@@ -90,8 +95,9 @@ func WriteStreamsMessage(cfg *config.Config, conn *kafka.Conn, streams map[strin
 	}
 }
 
-func streamsToStreamJSONMessage(stream endpoints.Stream) StreamsJSONMessage {
-	return StreamsJSONMessage{
+func streamsToStreamJSONMessage(id string, stream endpoints.Stream) StreamsJSONMessage {
+	v := StreamsJSONMessage{
+		Id:          id,
 		UserId:      stream.UserId,
 		UserLogin:   stream.UserLogin,
 		UserName:    stream.UserName,
@@ -99,5 +105,14 @@ func streamsToStreamJSONMessage(stream endpoints.Stream) StreamsJSONMessage {
 		GameName:    stream.GameName,
 		ViewerCount: stream.ViewerCount,
 		Language:    stream.Language,
+		IsMature:    stream.IsMature,
+		Type:        stream.Type,
+		StartedAt:   stream.StartedAt,
 	}
+	if v.Type == "" {
+		v.Timestamp = v.StartedAt
+	} else {
+		v.Timestamp = time.Now()
+	}
+	return v
 }
