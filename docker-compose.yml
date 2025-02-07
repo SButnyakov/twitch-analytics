@@ -25,39 +25,6 @@ services:
       KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
       CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
 
-  clickhouse-server:
-    image: clickhouse/clickhouse-server:latest
-    container_name: clickhouse-server
-    environment:
-      - CLICKHOUSE_DB=default
-      - CLICKHOUSE_USER=default
-      - CLICKHOUSE_PASSWORD=default
-    ports:
-      - "8123:8123"  # HTTP интерфейс
-      - "9000:9000"  # TCP интерфейс для клиентов
-      - "9009:9009"  # Интерфейс для репликации
-    volumes:
-      - clickhouse-data:/var/lib/clickhouse  # Монтирование тома для хранения данных
-    restart: unless-stopped
-
-  redis:
-    image: redis:latest
-    restart: always
-    ports:
-      - "6379:6379"
-    volumes:
-      - redisvol:/root/redis
-    environment:
-      - REDIS_PASSWORD=""
-      - REDIS_PORT=6379
-      - REDIS_DATABASES=16
-    healthcheck:
-      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.6.0
     container_name: elasticsearch
@@ -88,8 +55,6 @@ services:
 
 volumes:
   clickhouse-data:
-    driver: local
-  redisvol:
     driver: local
   es_data:
     driver: local

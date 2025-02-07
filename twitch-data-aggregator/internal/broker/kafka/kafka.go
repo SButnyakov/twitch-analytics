@@ -17,7 +17,7 @@ type StreamsJSONMessage struct {
 	UserName    string    `json:"user_name"`
 	GameId      string    `json:"game_id"`
 	GameName    string    `json:"game_name"`
-	ViewerCount uint32    `json:"viewer_count"`
+	ViewerCount uint32    `json:"viewers_count"`
 	Language    string    `json:"language"`
 	IsMature    bool      `json:"is_mature"`
 	Timestamp   time.Time `json:"timestamp"`
