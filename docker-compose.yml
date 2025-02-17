@@ -48,6 +48,8 @@ services:
     depends_on:
       - clickhouse
       - redis
+    ports:
+      - "8000:8000"
     restart: unless-stopped
     networks:
       - es_network
@@ -56,6 +58,8 @@ services:
     build: ./twitch-analytics-frontend
     depends_on:
       - api
+    ports:
+      - "3000:3000"
     restart: unless-stopped
     networks:
       - es_network

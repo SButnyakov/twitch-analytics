@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 	"twitch-data-aggregator/config"
 	"twitch-data-aggregator/internal/broker/kafka"
 
@@ -31,6 +32,45 @@ func Connect(cfg *config.Config) (*elasticsearch.Client, error) {
 		return nil, err
 	}
 	defer res.Body.Close()
+
+	// Проверка, существует ли индекс
+	indexName := "twitch"
+	res, err = es.Indices.Exists([]string{indexName})
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode == 404 { // Индекса нет — создаём
+		mapping := `{
+			"settings": {
+				"number_of_shards": 4,
+				"number_of_replicas": 0
+			},
+			"mappings": {
+				"properties": {
+					"user_id": { "type": "keyword" },
+					"user_login": { "type": "keyword" },
+					"user_name": { "type": "keyword" },
+					"game_id": { "type": "keyword" },
+					"game_name": { "type": "keyword" },
+					"viewers_count": { "type": "integer" },
+					"language": { "type": "keyword" },
+					"timestamp": { "type": "date" }
+				}
+			}
+		}`
+
+		res, err = es.Indices.Create(indexName, es.Indices.Create.WithBody(strings.NewReader(mapping)))
+		if err != nil {
+			return nil, fmt.Errorf("failed to create index: %w", err)
+		}
+		defer res.Body.Close()
+
+		if res.IsError() {
+			return nil, fmt.Errorf("error creating index: %s", res.String())
+		}
+	}
 
 	return es, nil
 }

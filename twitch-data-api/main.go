@@ -34,7 +34,7 @@ func main() {
 	app := fiber.New()
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: []string{"http://0.0.0.0:3000"},
+		AllowOrigins: []string{"http://localhost:3000"},
 	}))
 
 	app.Get("/avgonline/games/:game", handlers.AvgGameViews(clients[cfg.GamesAvgOnline]))
