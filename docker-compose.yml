@@ -102,11 +102,11 @@ services:
       - CLICKHOUSE_USER=default
       - CLICKHOUSE_PASSWORD=default
     ports:
-      - "8123:8123"  # HTTP интерфейс
-      - "9000:9000"  # TCP интерфейс для клиентов
-      - "9009:9009"  # Интерфейс для репликации
+      - "8123:8123"
+      - "9000:9000"
+      - "9009:9009"
     volumes:
-      - clickhouse-data:/var/lib/clickhouse  # Монтирование тома для хранения данных
+      - clickhouse-data:/var/lib/clickhouse
     restart: unless-stopped
     networks:
       - es_network
